@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    description: ''
+  labels:
+    appgroup: ''
+    version: v1
+  name: provider-beta
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: provider-beta
+      version: v1
+  template:
+    metadata:
+      annotations:
+        metrics.alpha.kubernetes.io/custom-endpoints: '[{"api":"","path":"","port":"","names":""}]'
+      labels:
+        app: provider-beta
+        version: v1
+    spec:
+      containers:
+        - image: >-
+            swr.cn-north-4.myhuaweicloud.com/servicestage/canary-provider-beta:v1
+          name: container-0
+          resources:
+            requests: {}
+            limits: {}
+          env:
+            - name: PAAS_APP_NAME
+              value: provider-beta
+            - name: PAAS_NAMESPACE
+              value: default
+            - name: PAAS_PROJECT_ID
+              value: 0b905c9f7480f2482fbec005b4d4bea6
+          volumeMounts: []
+        - image: 'nginx:perl'
+          name: container-1
+          resources:
+            requests: {}
+            limits: {}
+          env:
+            - name: PAAS_APP_NAME
+              value: provider-beta
+            - name: PAAS_NAMESPACE
+              value: default
+            - name: PAAS_PROJECT_ID
+              value: 0b905c9f7480f2482fbec005b4d4bea6
+          volumeMounts: []
+      imagePullSecrets:
+        - name: default-secret
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        nameservers: []
+        options:
+          - name: timeout
+            value: ''
+          - name: ndots
+            value: '5'
+          - name: single-request-reopen
+        searches: []
+      affinity: {}
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
+        - key: node.kubernetes.io/unreachable
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
+  replicas: 1
+  minReadySeconds: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
